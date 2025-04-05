@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import * as Icons from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import * as Icons from "lucide-react";
+import { supabase } from "../../lib/supabase";
 
 interface ReferenceItem {
   id: string;
@@ -15,7 +15,13 @@ interface ReferenceItem {
   size_info?: string | null;
 }
 
-type TableName = 'surface_types' | 'application_fields' | 'brands' | 'packages';
+type TableName =
+  | "surface_types"
+  | "application_fields"
+  | "brands"
+  | "packages"
+  | "color_types"
+  | "gloss_types";
 
 interface EditingItem extends ReferenceItem {
   isNew?: boolean;
@@ -29,7 +35,7 @@ interface EntityConfig {
   fields: {
     name: string;
     label: string;
-    type: 'text' | 'email' | 'tel' | 'url' | 'textarea' | 'select';
+    type: "text" | "email" | "tel" | "url" | "textarea" | "select";
     required?: boolean;
     options?: { value: string; label: string }[];
   }[];
@@ -37,55 +43,124 @@ interface EntityConfig {
 
 const entityConfigs: Record<TableName, EntityConfig> = {
   surface_types: {
-    name: 'Surface Types',
-    icon: 'Layers',
+    name: "Surface Types",
+    icon: "Layers",
     fields: [
-      { name: 'name', label: 'Name (English)', type: 'text', required: true },
-      
-      { name: 'description', label: 'Description (English)', type: 'textarea' },
-      { name: 'name_ar', label: 'Name (Arabic)', type: 'text', required: true }, // Arabic name
-      { name: 'description_ar', label: 'Description (Arabic)', type: 'textarea' } // Arabic description
-    ]
+      { name: "name", label: "Name (English)", type: "text", required: true },
+
+      { name: "description", label: "Description (English)", type: "textarea" },
+      { name: "name_ar", label: "Name (Arabic)", type: "text", required: true }, // Arabic name
+      {
+        name: "description_ar",
+        label: "Description (Arabic)",
+        type: "textarea",
+      }, // Arabic description
+    ],
   },
   application_fields: {
-    name: 'Application Fields',
-    icon: 'Brush',
+    name: "Application Fields",
+    icon: "Brush",
     fields: [
-      { name: 'name', label: 'Name (English)', type: 'text', required: true },
-      
-      { name: 'description', label: 'Description (English)', type: 'textarea' },
-      { name: 'name_ar', label: 'Name (Arabic)', type: 'text', required: true }, // Arabic name
-      { name: 'description_ar', label: 'Description (Arabic)', type: 'textarea' } // Arabic description
-    ]
+      { name: "name", label: "Name (English)", type: "text", required: true },
+
+      { name: "description", label: "Description (English)", type: "textarea" },
+      { name: "name_ar", label: "Name (Arabic)", type: "text", required: true }, // Arabic name
+      {
+        name: "description_ar",
+        label: "Description (Arabic)",
+        type: "textarea",
+      }, // Arabic description
+    ],
   },
   brands: {
-    name: 'Brands',
-    icon: 'Building2',
+    name: "Brands",
+    icon: "Building2",
     fields: [
-      { name: 'name', label: 'Brand Name (English)', type: 'text', required: true },
-     
-      { name: 'logo', label: 'Logo URL', type: 'url' },
-      { name: 'description', label: 'Description (English)', type: 'textarea' },
-      { name: 'name_ar', label: 'الاسم', type: 'text', required: true }, // Arabic name
-      { name: 'description_ar', label: 'الوصف', type: 'textarea' } // Arabic description
-    ]
+      {
+        name: "name",
+        label: "Brand Name (English)",
+        type: "text",
+        required: true,
+      },
+
+      { name: "logo", label: "Logo URL", type: "url" },
+      { name: "description", label: "Description (English)", type: "textarea" },
+      { name: "name_ar", label: "الاسم", type: "text", required: true }, // Arabic name
+      { name: "description_ar", label: "الوصف", type: "textarea" }, // Arabic description
+    ],
   },
   packages: {
-    name: 'Packages',
-    icon: 'Package',
+    name: "Packages",
+    icon: "Package",
     fields: [
-      { name: 'size_name', label: 'Size Name (English)', type: 'text', required: true },
-     
-      { name: 'description', label: 'Description (English)', type: 'textarea' },
-      { name: 'size_name_ar', label: 'Size Name (Arabic)', type: 'text', required: true }, // Arabic size name
-      { name: 'description_ar', label: 'Description (Arabic)', type: 'textarea' } // Arabic description
-    ]
-  }
+      {
+        name: "size_name",
+        label: "Size Name (English)",
+        type: "text",
+        required: true,
+      },
+
+      {
+        name: "size_name_ar",
+        label: "Size Name (Arabic)",
+        type: "text",
+        required: true,
+      }, // Arabic size name
+    ],
+  },
+  color_types: {
+    name: "Colors",
+    icon: "Palette",
+    fields: [
+      {
+        name: "name",
+        label: "Color Name (English)",
+        type: "text",
+        required: true,
+      },
+      {
+        name: "name_ar",
+        label: "Color Name (Arabic)",
+        type: "text",
+        required: true,
+      },
+      { name: "description", label: "Description (English)", type: "textarea" },
+      {
+        name: "description_ar",
+        label: "Description (Arabic)",
+        type: "textarea",
+      },
+    ],
+  },
+  gloss_types: {
+    name: "Gloss Types",
+    icon: "Droplet",
+    fields: [
+      {
+        name: "name",
+        label: "Gloss Type (English)",
+        type: "text",
+        required: true,
+      },
+      {
+        name: "name_ar",
+        label: "Gloss Type (Arabic)",
+        type: "text",
+        required: true,
+      },
+      { name: "description", label: "Description (English)", type: "textarea" },
+      {
+        name: "description_ar",
+        label: "Description (Arabic)",
+        type: "textarea",
+      },
+    ],
+  },
 };
 
 export default function ReferenceData() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TableName>('surface_types');
+  const [activeTab, setActiveTab] = useState<TableName>("surface_types");
   const [items, setItems] = useState<ReferenceItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,17 +168,8 @@ export default function ReferenceData() {
   const [editingItem, setEditingItem] = useState<EditingItem | null>(null);
 
   useEffect(() => {
-    checkAuth();
     fetchItems();
   }, [activeTab]);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate('/login');
-      return;
-    }
-  };
 
   const fetchItems = async () => {
     try {
@@ -112,14 +178,14 @@ export default function ReferenceData() {
       let query = supabase.from(activeTab);
       // Add specific ordering based on table
       switch (activeTab) {
-        case 'packages':
-          query = query.select('*').order('size_name');
+        case "packages":
+          query = query.select("*").order("size_name");
           break;
-        case 'application_fields':
-          query = query.select('*').order('name');
+        case "application_fields":
+          query = query.select("*").order("name");
           break;
         default:
-          query = query.select('*').order('name');
+          query = query.select("*").order("name");
       }
       const { data, error } = await query;
       if (error) throw error;
@@ -140,44 +206,42 @@ export default function ReferenceData() {
 
       // Prepare data for saving
       const saveData: any = {};
-      if (activeTab === 'packages') {
-        saveData.size_name = editingItem.size_name || '';
-        saveData.size_name_ar = editingItem.size_name_ar || ''; // Arabic size name
-        if (editingItem.description) saveData.description = editingItem.description;
-        if (editingItem.description_ar) saveData.description_ar = editingItem.description_ar; // Arabic description
+      if (activeTab === "packages") {
+        saveData.size_name = editingItem.size_name || "";
+        saveData.size_name_ar = editingItem.size_name_ar || ""; // Arabic size name
       } else {
-        saveData.name = editingItem.name || '';
-        saveData.name_ar = editingItem.name_ar || ''; // Arabic name
-        if (editingItem.description) saveData.description = editingItem.description;
-        if (editingItem.description_ar) saveData.description_ar = editingItem.description_ar; // Arabic description
+        saveData.name = editingItem.name || "";
+        saveData.name_ar = editingItem.name_ar || ""; // Arabic name
 
         // Add additional fields for brands
-        if (activeTab === 'brands') {
-          ['logo', 'contact_email', 'contact_phone', 'website'].forEach(field => {
-            if (editingItem[field as keyof EditingItem]) {
-              saveData[field] = editingItem[field as keyof EditingItem];
-            }
-          });
+        if (activeTab === "brands") {
+          ["logo", "contact_email", "contact_phone", "website"].forEach(
+            (field) => {
+              if (editingItem[field as keyof EditingItem]) {
+                saveData[field] = editingItem[field as keyof EditingItem];
+              }
+            },
+          );
         }
       }
 
       if (editingItem.isNew) {
         const { error } = await supabase.from(activeTab).insert([saveData]);
         if (error) throw error;
-        setSuccess('Item added successfully');
+        setSuccess("Item added successfully");
       } else {
         const { error } = await supabase
           .from(activeTab)
           .update(saveData)
-          .eq('id', editingItem.id);
+          .eq("id", editingItem.id);
         if (error) throw error;
-        setSuccess('Item updated successfully');
+        setSuccess("Item updated successfully");
       }
 
       setEditingItem(null);
       fetchItems();
     } catch (err: any) {
-      console.error('Error saving item:', err);
+      console.error("Error saving item:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -185,19 +249,16 @@ export default function ReferenceData() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this item?')) return;
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
     try {
       setLoading(true);
       setError(null);
-      const { error } = await supabase
-        .from(activeTab)
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from(activeTab).delete().eq("id", id);
       if (error) throw error;
-      setSuccess('Item deleted successfully');
+      setSuccess("Item deleted successfully");
       fetchItems();
     } catch (err: any) {
-      console.error('Error deleting item:', err);
+      console.error("Error deleting item:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -207,11 +268,13 @@ export default function ReferenceData() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">Reference Data Management</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-8">
+          Reference Data Management
+        </h1>
         {/* Tabs */}
         <div className="mb-8">
           <nav className="flex space-x-4">
-            {(Object.entries(entityConfigs)).map(([key, config]) => {
+            {Object.entries(entityConfigs).map(([key, config]) => {
               const Icon = Icons[config.icon];
               return (
                 <button
@@ -219,8 +282,8 @@ export default function ReferenceData() {
                   onClick={() => setActiveTab(key as TableName)}
                   className={`px-4 py-2 rounded-md ${
                     activeTab === key
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 hover:text-blue-600'
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-600 hover:text-blue-600"
                   }`}
                 >
                   <div className="flex items-center space-x-2">
@@ -265,7 +328,13 @@ export default function ReferenceData() {
                 {entityConfigs[activeTab].name}
               </h2>
               <button
-                onClick={() => setEditingItem({ size_name: '', size_name_ar: '', isNew: true })}
+                onClick={() =>
+                  setEditingItem({
+                    size_name: "",
+                    size_name_ar: "",
+                    isNew: true,
+                  })
+                }
                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 <Icons.Plus className="h-5 w-5 mr-2" />
@@ -278,20 +347,17 @@ export default function ReferenceData() {
               </div>
             ) : (
               <div className="space-y-4">
-                {items.map(item => (
+                {items.map((item) => (
                   <div
                     key={item.id}
                     className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
                   >
                     <div className="flex-1">
                       <h3 className="font-medium text-gray-800">
-                        {activeTab === 'packages'
+                        {activeTab === "packages"
                           ? `${item.size_name} (${item.size_name_ar})`
                           : `${item.name} (${item.name_ar})`}
                       </h3>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {item.description || item.description_ar}
-                      </p>
                     </div>
                     <div className="flex items-center space-x-2">
                       <button
@@ -324,7 +390,7 @@ export default function ReferenceData() {
             >
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-semibold text-gray-800">
-                  {editingItem.isNew ? 'Add New Item' : 'Edit Item'}
+                  {editingItem.isNew ? "Add New Item" : "Edit Item"}
                 </h3>
                 <button
                   onClick={() => setEditingItem(null)}
@@ -334,27 +400,30 @@ export default function ReferenceData() {
                 </button>
               </div>
               <div className="space-y-4">
-                {entityConfigs[activeTab].fields.map(field => (
+                {entityConfigs[activeTab].fields.map((field) => (
                   <div key={field.name}>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       {field.label}
-                      {field.required && <span className="text-red-500 ml-1">*</span>}
+                      {field.required && (
+                        <span className="text-red-500 ml-1">*</span>
+                      )}
                     </label>
-                    {field.type === 'textarea' ? (
+                    {field.type === "textarea" ? (
                       <textarea
                         value={
-                          field.name === 'size_name'
-                            ? editingItem.size_name || ''
-                            : editingItem[field.name as keyof EditingItem] || ''
+                          field.name === "size_name"
+                            ? editingItem.size_name || ""
+                            : editingItem[field.name as keyof EditingItem] || ""
                         }
                         onChange={(e) => {
                           const value = e.target.value;
-                          setEditingItem(prev => ({
+                          setEditingItem((prev) => ({
                             ...prev,
                             [field.name]: value,
-                            ...(field.name === 'name' && activeTab === 'packages'
+                            ...(field.name === "name" &&
+                            activeTab === "packages"
                               ? { size_name: value }
-                              : {})
+                              : {}),
                           }));
                         }}
                         rows={3}
@@ -365,18 +434,19 @@ export default function ReferenceData() {
                       <input
                         type={field.type}
                         value={
-                          field.name === 'size_name'
-                            ? editingItem.size_name || ''
-                            : editingItem[field.name as keyof EditingItem] || ''
+                          field.name === "size_name"
+                            ? editingItem.size_name || ""
+                            : editingItem[field.name as keyof EditingItem] || ""
                         }
                         onChange={(e) => {
                           const value = e.target.value;
-                          setEditingItem(prev => ({
+                          setEditingItem((prev) => ({
                             ...prev,
                             [field.name]: value,
-                            ...(field.name === 'name' && activeTab === 'packages'
+                            ...(field.name === "name" &&
+                            activeTab === "packages"
                               ? { size_name: value }
-                              : {})
+                              : {}),
                           }));
                         }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Edit,
@@ -12,12 +12,12 @@ import {
   MoveUp,
   MoveDown,
   Eye,
-  EyeOff
-} from 'lucide-react';
-import { faqService } from '../../lib/faqService';
-import type { Database } from '../../types/supabase';
+  EyeOff,
+} from "lucide-react";
+import { faqService } from "../../lib/faqService";
+import type { Database } from "../../types/supabase";
 
-type FAQ = Database['public']['Tables']['faqs']['Row'];
+type FAQ = Database["public"]["Tables"]["faqs"]["Row"];
 
 export default function FAQsAdmin() {
   const navigate = useNavigate();
@@ -37,8 +37,8 @@ export default function FAQsAdmin() {
       const data = await faqService.getAllFAQs();
       setFaqs(data);
     } catch (err) {
-      console.error('Error fetching FAQs:', err);
-      setError('Failed to load FAQs');
+      console.error("Error fetching FAQs:", err);
+      setError("Failed to load FAQs");
     } finally {
       setLoading(false);
     }
@@ -53,34 +53,36 @@ export default function FAQsAdmin() {
 
       if (editingFaq.id) {
         await faqService.updateFAQ(editingFaq.id, editingFaq);
-        setSuccess('FAQ updated successfully');
+        setSuccess("FAQ updated successfully");
       } else {
-        await faqService.createFAQ(editingFaq as Database['public']['Tables']['faqs']['Insert']);
-        setSuccess('FAQ created successfully');
+        await faqService.createFAQ(
+          editingFaq as Database["public"]["Tables"]["faqs"]["Insert"],
+        );
+        setSuccess("FAQ created successfully");
       }
 
       setEditingFaq(null);
       fetchFAQs();
     } catch (err) {
-      console.error('Error saving FAQ:', err);
-      setError('Failed to save FAQ');
+      console.error("Error saving FAQ:", err);
+      setError("Failed to save FAQ");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this FAQ?')) return;
+    if (!window.confirm("Are you sure you want to delete this FAQ?")) return;
 
     try {
       setLoading(true);
       setError(null);
       await faqService.deleteFAQ(id);
-      setSuccess('FAQ deleted successfully');
+      setSuccess("FAQ deleted successfully");
       fetchFAQs();
     } catch (err) {
-      console.error('Error deleting FAQ:', err);
-      setError('Failed to delete FAQ');
+      console.error("Error deleting FAQ:", err);
+      setError("Failed to delete FAQ");
     } finally {
       setLoading(false);
     }
@@ -93,12 +95,12 @@ export default function FAQsAdmin() {
       const prevFaq = faqs[index - 1];
       await Promise.all([
         faqService.updateFAQOrder(faq.id, prevFaq.order),
-        faqService.updateFAQOrder(prevFaq.id, faq.order)
+        faqService.updateFAQOrder(prevFaq.id, faq.order),
       ]);
       fetchFAQs();
     } catch (err) {
-      console.error('Error reordering FAQ:', err);
-      setError('Failed to reorder FAQ');
+      console.error("Error reordering FAQ:", err);
+      setError("Failed to reorder FAQ");
     }
   };
 
@@ -109,23 +111,25 @@ export default function FAQsAdmin() {
       const nextFaq = faqs[index + 1];
       await Promise.all([
         faqService.updateFAQOrder(faq.id, nextFaq.order),
-        faqService.updateFAQOrder(nextFaq.id, faq.order)
+        faqService.updateFAQOrder(nextFaq.id, faq.order),
       ]);
       fetchFAQs();
     } catch (err) {
-      console.error('Error reordering FAQ:', err);
-      setError('Failed to reorder FAQ');
+      console.error("Error reordering FAQ:", err);
+      setError("Failed to reorder FAQ");
     }
   };
 
   const handleTogglePublished = async (id: string, currentStatus: boolean) => {
     try {
       await faqService.togglePublished(id, !currentStatus);
-      setSuccess(`FAQ ${currentStatus ? 'unpublished' : 'published'} successfully`);
+      setSuccess(
+        `FAQ ${currentStatus ? "unpublished" : "published"} successfully`,
+      );
       fetchFAQs();
     } catch (err) {
-      console.error('Error toggling FAQ status:', err);
-      setError('Failed to update FAQ status');
+      console.error("Error toggling FAQ status:", err);
+      setError("Failed to update FAQ status");
     }
   };
 
@@ -135,7 +139,17 @@ export default function FAQsAdmin() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">FAQ Management</h1>
           <button
-            onClick={() => setEditingFaq({ question: '', answer: '', category: '', order: faqs.length })}
+            onClick={() =>
+              setEditingFaq({
+                question: "",
+                answer: "",
+                question_ar: "",
+                answer_ar: "",
+                category: "",
+                order: faqs.length,
+                is_published: true,
+              })
+            }
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             <Plus className="h-5 w-5 mr-2" />
@@ -184,6 +198,11 @@ export default function FAQsAdmin() {
                   <div className="flex-1 mr-8">
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
                       {faq.question}
+                      {faq.question_ar && (
+                        <span className="text-sm text-gray-500 ml-2" dir="rtl">
+                          ({faq.question_ar})
+                        </span>
+                      )}
                     </h3>
                     <p className="text-gray-600">{faq.answer}</p>
                     {faq.category && (
@@ -194,11 +213,13 @@ export default function FAQsAdmin() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => handleTogglePublished(faq.id, faq.is_published)}
+                      onClick={() =>
+                        handleTogglePublished(faq.id, faq.is_published)
+                      }
                       className={`p-2 rounded-lg ${
                         faq.is_published
-                          ? 'text-green-600 hover:bg-green-50'
-                          : 'text-gray-400 hover:bg-gray-50'
+                          ? "text-green-600 hover:bg-green-50"
+                          : "text-gray-400 hover:bg-gray-50"
                       }`}
                     >
                       {faq.is_published ? (
@@ -251,7 +272,7 @@ export default function FAQsAdmin() {
             >
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">
-                  {editingFaq.id ? 'Edit FAQ' : 'Add New FAQ'}
+                  {editingFaq.id ? "Edit FAQ" : "Add New FAQ"}
                 </h2>
                 <button
                   onClick={() => setEditingFaq(null)}
@@ -262,36 +283,79 @@ export default function FAQsAdmin() {
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Question
-                  </label>
-                  <input
-                    type="text"
-                    value={editingFaq.question || ''}
-                    onChange={(e) =>
-                      setEditingFaq((prev) => ({ ...prev, question: e.target.value }))
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Question (English)
+                    </label>
+                    <input
+                      type="text"
+                      value={editingFaq.question || ""}
+                      onChange={(e) =>
+                        setEditingFaq((prev) => ({
+                          ...prev,
+                          question: e.target.value,
+                        }))
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Question (Arabic)
+                    </label>
+                    <input
+                      type="text"
+                      value={editingFaq.question_ar || ""}
+                      onChange={(e) =>
+                        setEditingFaq((prev) => ({
+                          ...prev,
+                          question_ar: e.target.value,
+                        }))
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      dir="rtl"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Answer
-                  </label>
-                  <textarea
-                    value={editingFaq.answer || ''}
-                    onChange={(e) =>
-                      setEditingFaq((prev) => ({ ...prev, answer: e.target.value }))
-                    }
-                    rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Answer (English)
+                    </label>
+                    <textarea
+                      value={editingFaq.answer || ""}
+                      onChange={(e) =>
+                        setEditingFaq((prev) => ({
+                          ...prev,
+                          answer: e.target.value,
+                        }))
+                      }
+                      rows={4}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Answer (Arabic)
+                    </label>
+                    <textarea
+                      value={editingFaq.answer_ar || ""}
+                      onChange={(e) =>
+                        setEditingFaq((prev) => ({
+                          ...prev,
+                          answer_ar: e.target.value,
+                        }))
+                      }
+                      rows={4}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      dir="rtl"
+                    />
+                  </div>
                 </div>
-                
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -299,42 +363,64 @@ export default function FAQsAdmin() {
                   </label>
                   <input
                     type="text"
-                    value={editingFaq.category || ''}
+                    value={editingFaq.category || ""}
                     onChange={(e) =>
-                      setEditingFaq((prev) => ({ ...prev, category: e.target.value }))
+                      setEditingFaq((prev) => ({
+                        ...prev,
+                        category: e.target.value,
+                      }))
                     }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    onClick={() => setEditingFaq(null)}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSave}
-                    disabled={loading}
-                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400"
-                  >
-                    {loading ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <>
-                        <CheckCircle2 className="h-5 w-5 mr-2" />
-                        Save
-                      </>
-                    )}
-                  </button>
-                  
+                <div className="flex justify-between items-center mt-6">
+                  <div>
+                    <label className="inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editingFaq.is_published ?? true}
+                        onChange={(e) =>
+                          setEditingFaq((prev) => ({
+                            ...prev,
+                            is_published: e.target.checked,
+                          }))
+                        }
+                        className="sr-only peer"
+                      />
+                      <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      <span className="ms-3 text-sm font-medium text-gray-700">
+                        {editingFaq.is_published ? "Published" : "Draft"}
+                      </span>
+                    </label>
+                  </div>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => setEditingFaq(null)}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      disabled={loading}
+                      className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400"
+                    >
+                      {loading ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-5 w-5 mr-2" />
+                          Save
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>
           </div>
         )}
-        
       </div>
     </div>
   );
