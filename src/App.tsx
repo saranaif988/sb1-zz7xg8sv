@@ -46,8 +46,14 @@ function App() {
   }, []);
 
   // Create a component to use routes within Router context
-  const TempoRoutes = () =>
-    import.meta.env.VITE_TEMPO ? useRoutes(routes) : null;
+  function TempoRoutes() {
+    try {
+      return useRoutes(routes);
+    } catch (error) {
+      console.error("Error in TempoRoutes:", error);
+      return null;
+    }
+  }
 
   // ScrollToTop component to reset scroll position on navigation
   const ScrollToTop = () => {
@@ -66,7 +72,7 @@ function App() {
         <ScrollToTop />
         <div className="min-h-screen bg-gray-50">
           {/* Tempo routes */}
-          <TempoRoutes />
+          {import.meta.env.VITE_TEMPO && <TempoRoutes />}
           <Routes>
             {/* Admin Routes - Protected by authentication */}
             <Route

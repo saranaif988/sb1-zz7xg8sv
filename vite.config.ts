@@ -62,6 +62,5 @@ export default defineConfig({
     fs: {
       strict: false, // Less strict file system checks
     },
-    middlewareMode: false, // Disable middleware mode
   },
 });

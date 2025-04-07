@@ -1,45 +1,32 @@
 import { supabase } from "./supabase";
-import { getLocalizedField, createLocalizedSelect } from "./supabase";
 import type { Database } from "../types/supabase";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
-type ProductUpdate = Database["public"]["Tables"]["products"]["Update"];
 
-interface UpdateResult {
-  success: boolean;
-  message: string;
-  data?: Product;
-  error?: any;
+interface FilterOptions {
+  filters?: {
+    application_fields?: string[];
+    surface_types?: string[];
+    color?: string[];
+    gloss?: string[];
+    search?: string;
+  };
+  limit?: number;
+  offset?: number;
+  orderBy?: {
+    column: string;
+    ascending: boolean;
+  };
 }
 
-export const validateProduct = (product: ProductUpdate): string | null => {
-  if (!product.name?.trim()) {
-    return "Product name is required";
-  }
-  if (
-    product.price !== undefined &&
-    (isNaN(product.price) || product.price < 0)
-  ) {
-    return "Price must be a valid positive number";
-  }
-  if (!product.brand_id) {
-    return "Brand is required";
-  }
-  return null;
-};
-
-export const fetchProducts = async (
-  language: "en" | "ar",
-  options: {
-    filters?: Record<string, any>;
-    limit?: number;
-    offset?: number;
-    orderBy?: { column: string; ascending: boolean };
-  },
-) => {
-  // Set a reasonable timeout to prevent hanging requests
+// Function to fetch products with filtering, pagination, and ordering
+export async function fetchProducts(
+  language: string,
+  options: FilterOptions = {},
+) {
+  // Set a longer timeout to prevent premature request failures
   const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error("Request timeout")), 10000);
+    setTimeout(() => reject(new Error("Request timeout")), 30000);
   });
 
   try {
@@ -47,39 +34,55 @@ export const fetchProducts = async (
 
     // Apply filters if provided
     if (options.filters) {
-      Object.entries(options.filters).forEach(([key, value]) => {
-        if (key === "search" && typeof value === "string" && value.trim()) {
-          // Handle search differently - search in name and description
-          const searchTerm = value.trim();
+      const { application_fields, surface_types, color, gloss, search } =
+        options.filters;
+
+      // Filter by application fields (array contains)
+      if (application_fields && application_fields.length > 0) {
+        query = query.overlaps("application_fields", application_fields);
+      }
+
+      // Filter by surface types (array contains)
+      if (surface_types && surface_types.length > 0) {
+        query = query.overlaps("surface_types", surface_types);
+      }
+
+      // Filter by color
+      if (color && color.length > 0) {
+        query = query.in("color", color);
+      }
+
+      // Filter by gloss
+      if (gloss && gloss.length > 0) {
+        query = query.in("gloss", gloss);
+      }
+
+      // Search in name and description based on language
+      if (search && search.trim() !== "") {
+        const searchTerm = `%${search.trim().toLowerCase()}%`;
+        if (language === "ar") {
           query = query.or(
-            `name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%,description_ar.ilike.%${searchTerm}%`,
+            `name_ar.ilike.${searchTerm},description_ar.ilike.${searchTerm},name.ilike.${searchTerm},description.ilike.${searchTerm}`,
           );
-        } else if (Array.isArray(value) && value.length > 0) {
-          // For array values, use appropriate operators based on field type
-          if (key === "application_fields" || key === "surface_types") {
-            // Use in operator for multiple values
-            if (value.length === 1) {
-              query = query.eq(key, value[0]);
-            } else {
-              query = query.in(key, value);
-            }
-          } else if (key === "color" || key === "gloss") {
-            // For color and gloss, use OR conditions for exact matches
-            const orConditions = value
-              .map((val) => `${key}.eq.${val}`)
-              .join(",");
-            if (orConditions) {
-              query = query.or(orConditions);
-            }
-          }
+        } else {
+          query = query.or(
+            `name.ilike.${searchTerm},description.ilike.${searchTerm}`,
+          );
         }
-      });
+      }
+    }
+
+    // Apply ordering
+    if (options.orderBy) {
+      const { column, ascending } = options.orderBy;
+      query = query.order(column, { ascending });
     }
 
     // Apply pagination
     if (options.limit) {
       query = query.limit(options.limit);
     }
+
     if (options.offset) {
       query = query.range(
         options.offset,
@@ -87,159 +90,60 @@ export const fetchProducts = async (
       );
     }
 
-    // Apply ordering
-    if (options.orderBy) {
-      query = query.order(options.orderBy.column, {
-        ascending: options.orderBy.ascending,
-      });
-    }
+    // Execute query with timeout
+    const result = (await Promise.race([query, timeoutPromise])) as any;
 
-    const { data, error, count } = await query;
-
-    if (error) {
-      console.error("Supabase query error:", error);
-      throw error;
-    }
-
-    console.log("Fetched products:", data?.length || 0, "Total count:", count);
-
-    return { data: data || [], count: count || 0 };
+    return {
+      data: result.data as Product[],
+      count: result.count as number,
+    };
   } catch (error) {
     console.error("Error fetching products:", error);
-    return { data: [], count: 0 }; // Return empty results instead of throwing
+    throw error;
   }
-};
+}
 
-export const fetchUniqueProductValues = async (field: string) => {
+// Function to update a product in the database
+export async function updateProduct(id: string, productData: Partial<Product>) {
   try {
-    // First get all non-null values for the field
     const { data, error } = await supabase
       .from("products")
-      .select(field)
-      .not(field, "is", null)
-      .not(field, "eq", "");
+      .update(productData)
+      .eq("id", id)
+      .select();
+
+    if (error) throw error;
+    return { data: data[0] as Product, error: null };
+  } catch (error) {
+    console.error("Error updating product:", error);
+    return { data: null, error };
+  }
+}
+
+// Function to fetch unique values for a specific column from products table
+export async function fetchUniqueProductValues(
+  column: string,
+): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from("products")
+      .select(column)
+      .not(column, "is", null);
 
     if (error) throw error;
 
     // Extract unique values
-    const allValues = data.map((item) => item[field]);
-    // Filter out null and empty values before creating the set
-    const filteredValues = allValues.filter(
-      (value) => value !== null && value !== "",
-    );
-    const uniqueValues = [...new Set(filteredValues)];
+    const uniqueValues = new Set<string>();
+    data.forEach((item) => {
+      const value = item[column as keyof typeof item];
+      if (typeof value === "string" && value.trim() !== "") {
+        uniqueValues.add(value);
+      }
+    });
 
-    return uniqueValues;
+    return Array.from(uniqueValues);
   } catch (error) {
-    console.error(`Error fetching unique ${field} values:`, error);
+    console.error(`Error fetching unique ${column} values:`, error);
     return [];
   }
-};
-
-export const updateProduct = async (
-  id: string,
-  packages: string[],
-  productData: ProductUpdate & { packages?: string[] },
-  onSuccess?: () => void,
-  onError?: () => void,
-): Promise<UpdateResult> => {
-  try {
-    // Input validation
-    const validationError = validateProduct(productData);
-    if (validationError) {
-      return {
-        success: false,
-        message: validationError,
-      };
-    }
-
-    // First check if the product exists
-    const { count, error: countError } = await supabase
-      .from("products")
-      .select("*", { count: "exact", head: true })
-      .eq("id", id);
-
-    if (countError) {
-      throw new Error("Failed to verify product existence");
-    }
-
-    if (count === 0) {
-      return {
-        success: false,
-        message: "Product no longer exists",
-      };
-    }
-
-    // Get current product data for rollback
-    const { data: currentProduct, error: fetchError } = await supabase
-      .from("products")
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (fetchError) {
-      throw new Error("Failed to fetch current product data");
-    }
-
-    // Update product
-    const { packages: packageIds, ...updateData } = productData;
-    const { data: updatedProduct, error: updateError } = await supabase
-      .from("products")
-      .update(updateData)
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (updateError) {
-      // Handle specific error cases
-      if (updateError.code === "23505") {
-        return {
-          success: false,
-          message: "A product with this name already exists",
-        };
-      }
-      throw updateError;
-    }
-
-    // Update product packages if provided
-    if (packageIds) {
-      // First delete existing packages
-      await supabase.from("product_packages").delete().eq("product_id", id);
-
-      // Then insert new ones
-      if (packageIds.length > 0) {
-        const { error: packagesError } = await supabase
-          .from("product_packages")
-          .insert(
-            packageIds.map((packageId) => ({
-              product_id: id,
-              package_id: packageId,
-            })),
-          );
-
-        if (packagesError) throw packagesError;
-      }
-    }
-
-    // Call success callback if provided
-    onSuccess?.();
-
-    return {
-      success: true,
-      message: "Product updated successfully",
-      data: updatedProduct,
-    };
-  } catch (error: any) {
-    // Call error callback if provided
-    onError?.();
-
-    // Log error for debugging
-    console.error("Product update error:", error);
-
-    return {
-      success: false,
-      message: error.message || "Failed to update product",
-      error,
-    };
-  }
-};
+}

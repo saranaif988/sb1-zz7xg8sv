@@ -7,7 +7,8 @@ import "./index.css";
 import { TempoDevtools } from "tempo-devtools";
 TempoDevtools.init();
 
-createRoot(document.getElementById("root")!).render(
+const root = createRoot(document.getElementById("root")!);
+root.render(
   <StrictMode>
     <App />
   </StrictMode>,

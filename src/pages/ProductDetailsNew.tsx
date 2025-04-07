@@ -17,7 +17,7 @@ import {
   Star,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { generateProductPDF } from "../components/ui/DownloadPDFButton";
+import { generateProductPDF } from "../lib/pdfGenerator";
 import { getLocalizedField } from "../lib/supabase";
 import { useLanguage } from "../contexts/LanguageContext";
 import type { Database } from "../types/supabase";
@@ -234,7 +234,7 @@ export default function ProductDetailsNew() {
       // Use the comprehensive generateProductPDF function with language parameter
       await generateProductPDF(product, language);
     } catch (error) {
-      console.error("Error creating text file:", error);
+      console.error("Error creating PDF file:", error);
     }
   };
 
