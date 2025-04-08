@@ -96,9 +96,9 @@ export default function FeaturedProducts() {
                         : product.description}
                     </p>
                     <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
-                      <span className="text-lg font-medium text-[#2C2C2C]">
+                      {/* <span className="text-lg font-medium text-[#2C2C2C]">
                         {t("common.price")} ${product.price.toFixed(2)}
-                      </span>
+                      </span>*/}
                       <Link
                         to={`/products/${product.id}`}
                         className="inline-flex items-center text-[#233054] font-medium group-hover:translate-x-1 transition-transform"

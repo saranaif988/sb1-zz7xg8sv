@@ -23,12 +23,18 @@ export default defineConfig({
     tempo(), // Add the tempo plugin
   ],
   optimizeDeps: {
-    exclude: ["lucide-react", "jspdf", "framer-motion"], // Exclude memory-intensive packages and framer-motion
+    exclude: ["lucide-react", "jspdf", "framer-motion", "core-js"], // Exclude problematic packages
     esbuildOptions: {
       target: "es2020", // Use a more compatible target
       legalComments: "none", // Remove comments to reduce size
       minify: true, // Minify during optimization
     },
+  },
+  define: {
+    // Polyfill for require to fix core-js issues
+    require:
+      '((path) => { throw new Error("Dynamic require of " + path + " is not supported"); })',
+    global: "window",
   },
   resolve: {
     alias: {

@@ -13,6 +13,7 @@ export const en = {
     learnMore: "Learn More",
     downloadPdf: "Download Specifications",
     backToProducts: "Back to Products",
+    errorGeneratingPDF: "Error generating PDF. Please try again.",
   },
   productDetails: {
     color: "color",
@@ -82,9 +83,9 @@ export const en = {
     },
   },
   about: {
-    title: "Transforming Spaces",
+    title: "Colors that breathe life finishes that endure",
     subtitle:
-      "Creating beautiful, lasting finishes for homes and businesses around the world",
+      "We transform every wall and brushstroke into a work of art, bringing spaces to life with beauty that belongs  in homes and businesses around the world",
     story: {
       title: "Our Story",
       content:

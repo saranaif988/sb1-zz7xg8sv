@@ -22,8 +22,7 @@ import ProductsAdmin from "./pages/admin/ProductsAdmin";
 import ProductForm from "./pages/admin/ProductForm";
 import FAQsAdmin from "./pages/admin/FAQsAdmin";
 import { supabase } from "./lib/supabase";
-import PaintingService from "./pages/services/PaintingService";
-import ColorConsulting from "./pages/services/ColorConsulting";
+
 import { LanguageProvider } from "./contexts/LanguageContext";
 
 function App() {
@@ -117,14 +116,6 @@ function App() {
                       />
                       <Route path="about" element={<About />} />
                       <Route path="login" element={<Login />} />
-                      <Route
-                        path="services/painting"
-                        element={<PaintingService />}
-                      />
-                      <Route
-                        path="services/colors"
-                        element={<ColorConsulting />}
-                      />
                     </Routes>
                     <Footer />
                   </main>

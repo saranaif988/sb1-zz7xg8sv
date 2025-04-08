@@ -37,24 +37,36 @@ export async function fetchProducts(
       const { application_fields, surface_types, color, gloss, search } =
         options.filters;
 
-      // Filter by application fields (array contains)
+      // Filter by application fields
       if (application_fields && application_fields.length > 0) {
-        query = query.overlaps("application_fields", application_fields);
+        // Create an OR condition for each application field
+        const appFieldConditions = application_fields.map(
+          (field) => `application_fields.eq.${field}`,
+        );
+        query = query.or(appFieldConditions.join(","));
       }
 
-      // Filter by surface types (array contains)
+      // Filter by surface types
       if (surface_types && surface_types.length > 0) {
-        query = query.overlaps("surface_types", surface_types);
+        // Create an OR condition for each surface type
+        const surfaceTypeConditions = surface_types.map(
+          (type) => `surface_types.eq.${type}`,
+        );
+        query = query.or(surfaceTypeConditions.join(","));
       }
 
       // Filter by color
       if (color && color.length > 0) {
-        query = query.in("color", color);
+        // Use ilike for case-insensitive partial matching for each color
+        const colorConditions = color.map((c) => `color.ilike.%${c}%`);
+        query = query.or(colorConditions.join(","));
       }
 
       // Filter by gloss
       if (gloss && gloss.length > 0) {
-        query = query.in("gloss", gloss);
+        // Use ilike for case-insensitive partial matching for each gloss type
+        const glossConditions = gloss.map((g) => `gloss.ilike.%${g}%`);
+        query = query.or(glossConditions.join(","));
       }
 
       // Search in name and description based on language

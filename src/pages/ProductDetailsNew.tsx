@@ -1,23 +1,18 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
   ChevronDown,
-  Download,
   Shield,
   Droplet,
   Clock,
   Ruler,
   AlertTriangle,
   Loader2,
-  Building2,
   Beaker,
-  Thermometer,
-  Star,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { generateProductPDF } from "../lib/pdfGenerator";
 import { getLocalizedField } from "../lib/supabase";
 import { useLanguage } from "../contexts/LanguageContext";
 import type { Database } from "../types/supabase";
@@ -228,16 +223,6 @@ export default function ProductDetailsNew() {
     }));
   };
 
-  const handleDownloadPDF = async () => {
-    if (!product) return;
-    try {
-      // Use the comprehensive generateProductPDF function with language parameter
-      await generateProductPDF(product, language);
-    } catch (error) {
-      console.error("Error creating PDF file:", error);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -316,11 +301,11 @@ export default function ProductDetailsNew() {
               </h1>
               <p className="text-gray-600 mb-6">{product.description}</p>
 
-              <div className=" gap-4 mb-6">
-                <span className=" font-normal   text-gray-900">
+              {/*<div className="mb-6">
+                <span className="text-xl font-medium text-gray-900">
                   ${product.price.toFixed(2)}
                 </span>
-              </div>
+              </div>*/}
 
               {product.product_packages &&
                 product.product_packages.length > 0 && (
@@ -338,13 +323,6 @@ export default function ProductDetailsNew() {
                         </span>
                       ))}
                     </div>
-                    <button
-                      onClick={handleDownloadPDF}
-                      className="flex items-start ml-auto gap-2 mt-3 text-[#2b4796] hover:text-[#233054]"
-                    >
-                      <Download className="h-5 w-5" />
-                      {t("common.downloadPdf")}
-                    </button>
                   </div>
                 )}
             </div>

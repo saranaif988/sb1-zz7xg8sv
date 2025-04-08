@@ -120,6 +120,7 @@ function ProductsNew() {
   const fetchFilterData = async () => {
     try {
       setFiltersLoading(true);
+      console.log("Fetching filter data...");
 
       // Fetch reference data from tables
       const [
@@ -133,6 +134,13 @@ function ProductsNew() {
         supabase.from("color_types").select("*").order("name"),
         supabase.from("gloss_types").select("*").order("name"),
       ]);
+
+      console.log("Filter data fetched:", {
+        applicationFields: applicationFieldsData?.length || 0,
+        surfaceTypes: surfaceTypesData?.length || 0,
+        colorTypes: colorTypesData?.length || 0,
+        glossTypes: glossTypesData?.length || 0,
+      });
 
       // Transform color types into filter options
       const colorOptions: FilterOption[] = colorTypesData
@@ -226,7 +234,10 @@ function ProductsNew() {
         orderBy: { column: "created_at", ascending: false },
       };
 
-      console.log("Fetching with options:", filterOptions);
+      console.log(
+        "Fetching products with filters:",
+        JSON.stringify(filterOptions, null, 2),
+      );
 
       const { data, count } = await fetchProducts(language, filterOptions);
 
@@ -254,6 +265,8 @@ function ProductsNew() {
         return "surface_types";
       case "colors":
         return "color"; // Map colors UI category to color database column
+      case "gloss":
+        return "gloss"; // Map gloss UI category to gloss database column
       default:
         return uiCategory;
     }
@@ -261,12 +274,17 @@ function ProductsNew() {
 
   const toggleFilter = (category: string, value: string) => {
     const dbColumn = getCategoryDbColumn(category);
-    setActiveFilters((prev) => ({
-      ...prev,
-      [dbColumn]: prev[dbColumn].includes(value)
-        ? prev[dbColumn].filter((v) => v !== value)
-        : [...prev[dbColumn], value],
-    }));
+    console.log(`Toggling filter: ${category} (${dbColumn}) - ${value}`);
+    setActiveFilters((prev) => {
+      const newFilters = {
+        ...prev,
+        [dbColumn]: prev[dbColumn].includes(value)
+          ? prev[dbColumn].filter((v) => v !== value)
+          : [...prev[dbColumn], value],
+      };
+      console.log("Updated filters:", newFilters);
+      return newFilters;
+    });
     setCurrentPage(1);
   };
 
@@ -334,7 +352,7 @@ function ProductsNew() {
                     type="checkbox"
                     checked={activeFilters[dbColumn].includes(option.id)}
                     onChange={() => toggleFilter(category, option.id)}
-                    className="h-4 w-4 rounded border-gray-300 text-[#233054] focus:ring-[#233054]"
+                    className="h-4 w-4 rounded border-gray-300 text-[#233054] focus:ring-[#233054] cursor-pointer"
                   />
                   <span className="ml-2 text-sm text-gray-600">
                     {language === "ar" && option.name_ar
@@ -547,9 +565,9 @@ function ProductsNew() {
                             : product.description}
                         </p>
                         <div className="mt-auto pt-4 border-t border-gray-100 flex items-center ">
-                          <span className="text-lg font-medium text-[#2C2C2C]">
+                          {/* <span className="text-lg font-medium text-[#2C2C2C]">
                             ${product.price.toFixed(2)}
-                          </span>
+                          </span>*/}
                           <div className="px-4 flex items-center">
                             <span className="text-sm text-[#233054]  font-light  group-hover:translate-x-1 transition-transform">
                               {t("common.viewDetails")}{" "}
